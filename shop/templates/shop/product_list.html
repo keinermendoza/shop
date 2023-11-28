@@ -1,0 +1,72 @@
+{% extends "shop/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if category %}{{ category.name }}{% else %}Products{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="flex flex-col md:flex-row">
+
+    <nav id="sidebar"
+        class="p-2 w-full md:w-60  sm:mt-6">
+        <h3 class="text-lg font-semibold my-2">Categories</h3>
+        <ul>
+            <li class="py-1 mb-1 px-2 rounded 
+                {% if not category %}
+                    bg-blue-600 text-white
+                {% endif %}">
+
+                <a class="text-base align-middle" href="{% url 'shop:product_list' %}">All</a>
+            </li>
+
+        {% for c in categories %}
+            <li class="py-1 px-2 my-1 rounded
+                {% if category.slug == c.slug %}
+                    bg-blue-600 text-white
+                {% endif %}">
+
+                <a href="{{ c.get_absolute_url }}">{{ c.name }}</a>
+            </li>
+        {% endfor %}
+        
+        </ul>
+    </nav>
+
+    <div id="main" class="px-3">
+        <h1 class="text-3xl mb-5">
+            {% if category %}
+                {{ category.name }}
+            {% else %}
+                Products
+            {% endif %}
+        </h1>
+
+        <div class="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  sm:auto-rows-[300px] ">
+            {% for product in products %}
+            <div class="w-full">
+                <a class="block w-full h-4/5"
+                    href="{{ product.get_absolute_url }}">
+
+                    <img class="h-full w-full object-cover" 
+                    
+                        src="
+                        {% if product.image %}
+                            {{ product.image.url }}
+                        {% else %}
+                            {%static "img/no_image.png" %}
+                        {% endif %}">
+
+                </a>
+                <a class="block mt-1 text-blue-600 text-center"
+                    href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                <p class="text-center">
+                    ${{ product.price }}
+                <p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
