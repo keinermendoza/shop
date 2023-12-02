@@ -1,56 +1,123 @@
 {% extends "shop/base.html" %}
 {% load static %}
-{% block title %}
-Your shopping cart
-{% endblock %}
-{% block content %}
-<h1>Your shopping cart</h1>
-<table class="cart">
-<thead>
-<tr>
-<th>Image</th>
-<th>Product</th>
-<th>Quantity</th>
-<th>Remove</th>
-<th>Unit price</th>
-<th>Price</th>
-</tr>
-</thead>
-<tbody>
-{% for item in cart %}
-{% with product=item.product %}
-<tr>
-<td>
-<a href="{{ product.get_absolute_url }}">
-<img src="{% if product.image %}{{ product.image.url }}
-{% else %}{% static "img/no_image.png" %}{% endif %}">
-</a>
-</td>
 
-<td>{{ product.name }}</td>
-<td>{{ item.quantity }}</td>
-<td>
-<form action="{% url "cart:cart_remove" product.id %}"
-method="post">
-<input type="submit" value="Remove">
-{% csrf_token %}
-</form>
-</td>
-<td class="num">${{ item.price }}</td>
-<td class="num">${{ item.total_price }}</td>
-</tr>
-{% endwith %}
+
+{% block script %}
+    <script defer src="{% static 'shop/js/buttons-product-cart.js' %}"></script>
+{% endblock script %}
+
+{% block title %}
+    Your shopping cart
+{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl mb-5" >Your shopping cart</h1>
+<table class="text-center w-full">
+    <thead>
+        <tr class="h-14 bg-blue-500 text-white">
+            <th class="d-none sm:table-cell">Image</th>
+
+            <th>
+                <span class="d-none sm:inline">Product</span>
+                <span class="sm:hidden">Prod.</span>
+            </th>
+            <th>
+                <span class="d-none sm:inline">Quantity</span>
+                <span class="sm:hidden">Qnt.</span>
+            </th>
+            <th>
+                <span class="d-none sm:inline">Remove</span>
+                <span class="sm:hidden">Rmv.</span>
+            </th>
+            <th>
+                <span class="d-none sm:inline">Unit Price</span>
+                <span class="sm:hidden">Price</span>
+            </th>
+            <th>
+                <span class="d-none sm:inline">Sub Total</span>
+                <span class="sm:hidden">Total</span>
+            </th>
+        </tr>
+    </thead>
+<tbody class="bg-blue-100">
+
+{% for item in cart %}
+    {% with product=item.product %}
+    <tr class="h-40">
+        <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
+            <a href="{{ product.get_absolute_url }}">
+                <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}"
+                    class="w-full"
+                
+                >
+            </a>
+        </td>
+
+        <td class="w-1/6">{{ product.name }}</td>
+        <td class="w-1/6">
+
+        {% if item.quantity > 1 %}
+            <!-- 
+            <button class="inline-block p-1 text-white bg-blue-900 px-2 rounded mr-2" hx-post="{% url 'cart:cart_add' product.id %}"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                hx-target="body"
+                hx-vals='{"override":"True", "quantity": "{{ item.quantity |add:-1 }} " }'
+                >-</button>
+            -->
+
+
+        {% endif %}
+        <span id="edit-{{product.id}}">
+            <span>{{item.quantity}}</span>
+            <button hx-get="{% url 'cart:cart_edit' product.id %}" hx-target="#edit-{{product.id}}">Edit</button>  
+        </span>
+            <!-- 
+            <button class="inline-block p-1 text-white bg-blue-900 px-2 rounded ms-2" hx-post="{% url 'cart:cart_add' product.id %}"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-target="body"
+                    hx-vals='{"override":"True", "quantity": "{{ item.quantity |add:1 }}"}'
+                    >+</button>
+            -->
+
+        </td>
+        <td class="w-1/6">
+            <!-- forms are not allowed as children of tr -->
+            <button hx-delete="{% url "cart:cart_remove" product.id %}" hx-target="body" 
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' 
+                    hx-confirm="Are you sure you want to remove the item {{product.name}} from your cart?"
+                    hx-push-url="true"
+                    class="text-white rounded p-2 bg-blue-900">
+                    
+                    <span class="d-none sm:inline">Remove</span>
+                    <span class="sm:hidden">X</span>
+                </button>
+
+            {% comment %} {% csrf_token %} {% endcomment %}
+            {% comment %} <form action="{% url "cart:cart_remove" product.id %}" method="post">
+                <input type="submit" value="Remove">
+                {% csrf_token %}
+            </form> {% endcomment %}
+        </td>
+        
+        <td class="w-1/6 " >${{ item.price }}</td>
+        <td class="w-1/6 " >${{ item.total_price }}</td>
+    </tr>
+    {% endwith %}
 {% endfor %}
-<tr class="total">
-<td>Total</td>
-<td colspan="4"></td>
-<td class="num">${{ cart.get_total_price }}</td>
-</tr>
+
+    <tr class="h-14 bg-blue-500 text-white">
+        <td class="text-left ps-2 text-lg font-semibold">Total</td>
+        <td class="sm:hidden" colspan="3"></td>
+        
+        <td class="d-none sm:table-cell" colspan="4"></td>
+        <td class="text-right pr-2 text-lg font-semibold">${{ cart.get_total_price }}</td>
+    </tr>
 </tbody>
 </table>
-<p class="text-right">
-<a href="{% url "shop:product_list" %}" class="button
-light">Continue shopping</a>
-<a href="#" class="button">Checkout</a>
+
+<p class="text-right mt-5">
+    <a class="p-2 rounded  mr-2 bg-blue-300" href="{% url "shop:product_list" %}" class="button light">Continue shopping</a>
+    <a class="p-2 rounded bg-blue-900 text-white " href="#" class="button">Checkout</a>
 </p>
+
 {% endblock %}

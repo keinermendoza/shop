@@ -3,13 +3,24 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>{% block title %}My shop{% endblock %}</title>
         <script src="{% static 'js/main.js' %}" defer></script>
         <link rel="stylesheet" href="{% static 'tailwind/tail.css' %}">
         <link rel="stylesheet" href="{% static 'general.css' %}">
+        <script src="{% static 'htmx.js' %}"></script>
+        {% comment %} <script src="{% static 'htmx-listeners.js' %}"></script> {% endcomment %}
+        
+        <script defer src="{% static 'token.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+        {% block script %}
+        {% endblock script %}
+        
+
+        <title>My shop - {% block title %}{% endblock %}</title>
 
     </head>
-    <body class="max-w-screen-xl mx-auto px-3 md:px-5">
+    <body hx-boost="false" class="max-w-screen-xl mx-auto px-3 md:px-5">
         <div id="header"
             class="py-3">
             <a href="{% url 'shop:product_list' %}" 

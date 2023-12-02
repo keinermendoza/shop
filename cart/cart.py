@@ -28,8 +28,14 @@ class Cart:
             cart[str(product.id)]['product'] = product
 
         for item in cart.values():
-            item['price'] = Decimal(item['price'])
+            # this keep with the price when user add item
+            # the proble if that if a user add one, the he can put as many he want and always remainds the same price until he cheakout 
+            # item['price'] = Decimal(item['price'])
+
+            # i prefer the keep the price updated
+            item['price'] = item['product'].price
             item['total_price'] = item['price'] * item['quantity']
+        
             yield item
 
     def __len__(self):
@@ -69,11 +75,11 @@ class Cart:
         self.save()
 
     # I thinks this works well
-    # def get_total_price(self):
-    #     return sum(product['total_price'] for product in self.cart.values())
-    
     def get_total_price(self):
-        return sum(Decimal(item['price']) * item['quantity'] for item in self.cart.values())
+        return sum(product['total_price'] for product in self.cart.values())
+    
+    # def get_total_price(self):
+    #     return sum(Decimal(item['price']) * item['quantity'] for item in self.cart.values())
     
     def clear(self):
         del self.session[settings.SESSION_CART_ID]

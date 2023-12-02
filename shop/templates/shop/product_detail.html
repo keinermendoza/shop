@@ -1,5 +1,12 @@
 {% extends "shop/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
+
+{% block script %}
+    <script defer src="{% static 'shop/js/buttons-product-cart.js' %}"></script>
+{% endblock script %}
+
+
 
 {% block title %}
     {{ product.name }}
@@ -18,12 +25,21 @@
     </h2>
 
     <p class="text-3xl font-semibold my-3">${{ product.price }}</p>
-    <form action="{% url 'cart:cart_add' product.id %}" method="post">
-        {{ cart_product_form }}
+
+    
+    <button class="bg-blue-400 border-2 border-black w-8 p-1 f-family-mono font-semibold rounded-sm" onclick="qunatityDown('product_quantity')">-</button>
+    
+    <form class="inline" id="form-cart-product" action="{% url 'cart:cart_add' product.id %}" method="post">
+        {% render_field cart_product_form.quantity id="product_quantity" class="w-10 bg-gray-400 border-2 border-black rounded-sm p-1 text-center f-family-mono font-semibold" %}
+        {% render_field cart_product_form.override %}
+        
         {% csrf_token %}
-        <input type="submit" value="Add to cart">
     </form>
     
-    {{ product.description|linebreaks }}
+    <button class="bg-blue-400 border-2 border-black w-8 p-1 f-family-mono font-semibold rounded-sm mr-3" onclick="quantityUp('product_quantity')">+</button>
+    <button class="bg-blue-400 border-2 border-black px-3 py-1 f-family-mono font-semibold rounded-sm" type="submit" form="form-cart-product">Add to cart</button>
+    
+    <p class="mt-5">{{product.description}}</p>
 </div>
+
 {% endblock %}
