@@ -1,9 +1,10 @@
-{% load widget_tweaks %}
 <button class="bg-blue-400 border-2 border-black w-8 p-1 f-family-mono font-semibold rounded-sm" onclick="qunatityDown('product_quantity{{product_id}}')">-</button>
 <form class="inline" id="form-cart-product" action="{% url 'cart:cart_add' product_id %}" method="post">
-    {% render_field cart_product_form.quantity id="product_quantity{{ product_id }}" class="w-10 bg-gray-400 border-2 border-black rounded-sm p-1 text-center f-family-mono font-semibold" %}
-    {% render_field cart_product_form.override %}
-    
+    <input  name="quantity"
+            type="number" id="product_quantity{{ product_id }}" 
+            value="{{quantity}}"
+            class="w-10 bg-gray-400 border-2 border-black rounded-sm p-1 text-center f-family-mono font-semibold" >
+    <input type="hidden" name="override" value=true>
     {% csrf_token %}
 </form>
 

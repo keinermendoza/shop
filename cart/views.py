@@ -15,7 +15,10 @@ def cart_add(request, product_id):
         cart.add(product=product,
                  quantity=cd['quantity'],
                  override_quantity=cd['override'])
-        
+    else:
+        print('is invalid')
+        print(request.POST)
+
         # # managing the cart updated
         # if cd['override'] == True:
         #     return HttpResponse(cd['quantity'])   
@@ -39,6 +42,5 @@ def cart_detail(request):
 def cart_edit(request, product_id):
     cart = Cart(request)
     product = cart.cart[str(product_id)]
-    print(product)
-    cart_product_form = CartAddProductForm(initial={'quantity':product['quantity'], 'override':True})
-    return render(request, 'cart/edit_quantity.html', {'cart_product_form': cart_product_form, 'product_id': product_id})
+    return render(request, 'cart/edit_quantity.html', {'quantity':product['quantity'],
+                                                        'product_id': product_id})
