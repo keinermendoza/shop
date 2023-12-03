@@ -4,6 +4,14 @@
 
 {% block script %}
     <script defer src="{% static 'shop/js/buttons-product-cart.js' %}"></script>
+    <script defer>
+        function claculateTotal() {
+            requestAnimationFrame(() => {
+                let subtotals = Array.from(document.querySelectorAll('.subtotal'))
+                let totalCart = document.getElementById('TotalCart')
+                totalCart.innerHTML = subtotals.reduce((sum, el) => sum + parseInt(el.innerHTML), 0).toFixed(2)
+        })}
+    </script>
 {% endblock script %}
 
 {% block title %}
@@ -43,7 +51,9 @@
 
 {% for item in cart %}
     {% with product=item.product %}
-    <tr class="h-40">
+    <tr class="h-40"
+        x-data="{quantity: {{item.quantity}}, price: {{item.price}}, edit:false}">
+
         <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
             <a href="{{ product.get_absolute_url }}">
                 <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}"
@@ -56,26 +66,58 @@
         <td class="w-1/6">{{ product.name }}</td>
         <td class="w-1/6">
 
+        <!-- 
+        VERSION 1 ACTUALIZABA TODA LA PAGIAN CON AJAX  
         {% if item.quantity > 1 %}
-            <!-- 
             <button class="inline-block p-1 text-white bg-blue-900 px-2 rounded mr-2" hx-post="{% url 'cart:cart_add' product.id %}"
                 hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                 hx-target="body"
                 hx-vals='{"override":"True", "quantity": "{{ item.quantity |add:-1 }} " }'
                 >-</button>
-            -->
-
-
+                
         {% endif %}
-        <span id="edit-{{product.id}}">
-            <span>{{item.quantity}}</span>
-            <button class="p-2 rounded bg-blue-900 text-white ms-2" hx-get="{% url 'cart:cart_edit' product.id %}" hx-target="#edit-{{product.id}}">
+        -->
+
+        <!-- VERSION 2 PEDIA EL FORM DE EDICION VIA AJAX hx-get="{% url 'cart:cart_edit' product.id %}"
+            AL SALVAR quantity ACTUALIZABA TODA LA PAGINA VIA AJAX -->
+
+           
+
+
+        <span :class="edit ? 'hidden' : 'inline-block'">
+            <span x-text="quantity">{{item.quantity}}</span>
+            
+            <button x-on:click="edit = ! edit"
+                    class="p-2 rounded bg-blue-900 text-white ms-2">
                 <svg fill="white" xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 512 512">
                     <path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"/>
                 </svg>
             </button>  
         </span>
+
+
+        <span  :class="edit ? 'inline-block' : 'hidden' " >
+            <button x-on:click="quantity > 1 ? --quantity : quantity, claculateTotal()" 
+                class="inline-block mr-2 bg-violet-800 text-white px-2 py-1 rounded">-</button>
+                
+            <span class="text-black" x-text="quantity"></span>
+
+            <button x-on:click="++quantity, claculateTotal()" 
+                class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">+</button>
+
+            <button x-on:click="edit = ! edit"
+                    hx-post="{% url 'cart:cart_add' product.id %}"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-swap="none"
+                    hx-include="#quantity{{ product.id }}"
+                    hx-vals='{"override":"True"}'
+                class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">Save</button>
+
+            <input type="hidden" name="quantity" x-model="quantity" id="quantity{{ product.id }}">
+        </span>
+        
             <!-- 
+            VERSION 1 ACTUALIZABA TODA LA PAGIAN CON AJAX  
             <button class="inline-block p-1 text-white bg-blue-900 px-2 rounded ms-2" hx-post="{% url 'cart:cart_add' product.id %}"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                     hx-target="body"
@@ -104,7 +146,9 @@
         </td>
         
         <td class="w-1/6 " >${{ item.price }}</td>
-        <td class="w-1/6 " >${{ item.total_price }}</td>
+
+        <td class="w-1/6" >$ <span class="subtotal" x-text="(quantity * price).toFixed(2)">{{ item.total_price }}</span></td>
+        {% comment %} <td class="w-1/6 " >${{ item.total_price }}</td> {% endcomment %}
     </tr>
     {% endwith %}
 {% endfor %}
@@ -114,7 +158,7 @@
         <td class="sm:hidden" colspan="3"></td>
         
         <td class="d-none sm:table-cell" colspan="4"></td>
-        <td class="text-right pr-2 text-lg font-semibold">${{ cart.get_total_price }}</td>
+        <td class="text-right pr-2 text-lg font-semibold">$ <span id="TotalCart">{{ cart.get_total_price }}</span></td>
     </tr>
 </tbody>
 </table>
