@@ -4,14 +4,18 @@
 
 {% block script %}
     <script defer src="{% static 'shop/js/buttons-product-cart.js' %}"></script>
-    <script defer>
+    <!-- <script defer>
         function claculateTotal() {
             requestAnimationFrame(() => {
                 let subtotals = Array.from(document.querySelectorAll('.subtotal'))
-                let totalCart = document.getElementById('TotalCart')
-                totalCart.innerHTML = subtotals.reduce((sum, el) => sum + parseInt(el.innerHTML), 0).toFixed(2)
+                let totalCartPrice = document.getElementById('TotalCart')
+                totalCartPrice.innerHTML = subtotals.reduce((sum, el) => sum + parseInt(el.innerHTML), 0).toFixed(2)
+                
+                let itemsQuantity = Array.from(document.querySelectorAll('.item-quantity'))
+                let totalItems = document.getElementById('cart-items-quantity')
+                totalItems.innerHTML = itemsQuantity.reduce((sum, el) => sum + parseInt(el.innerHTML), 0)
         })}
-    </script>
+    </script> -->
 {% endblock script %}
 
 {% block title %}
@@ -20,7 +24,8 @@
 
 {% block content %}
 <h1 class="text-3xl mb-5" >Your shopping cart</h1>
-<table class="text-center w-full">
+<table  x-data="{cart: [], totalPrice: 0 }"
+        class="text-center w-full">
     <thead>
         <tr class="h-14 bg-blue-500 text-white">
             <th class="d-none sm:table-cell">Image</th>
@@ -52,7 +57,9 @@
 {% for item in cart %}
     {% with product=item.product %}
     <tr class="h-40"
-        x-data="{quantity: {{item.quantity}}, price: {{item.price}}, edit:false}">
+        x-data="{itemId: {{product.id}}, quantity: {{item.quantity}}, price: {{item.price}}, edit:false}"
+        x-init="cart.push({id: itemId, quantity: quantity, price: price})"
+        >
 
         <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
             <a href="{{ product.get_absolute_url }}">
@@ -97,13 +104,20 @@
 
 
         <span  :class="edit ? 'inline-block' : 'hidden' " >
-            <button x-on:click="quantity > 1 ? --quantity : quantity, claculateTotal()" 
-                class="inline-block mr-2 bg-violet-800 text-white px-2 py-1 rounded">-</button>
+            <button x-on:click="quantity > 1 ? --quantity : quantity;
+                            cart[cart.findIndex(item => item.id === itemId)].quantity = quantity;
+                            cartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                            totalPrice = (cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2);" 
+                    class="inline-block mr-2 bg-violet-800 text-white px-2 py-1 rounded">-</button>
                 
-            <span class="text-black" x-text="quantity"></span>
+            <span class="item-quantity text-black" x-text="quantity"></span>
 
-            <button x-on:click="++quantity, claculateTotal()" 
-                class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">+</button>
+            <button x-on:click="++quantity;
+                            cart[cart.findIndex(item => item.id === itemId)].quantity = quantity;
+                            cartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                            totalPrice = (cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2);" 
+                    
+                    class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">+</button>
 
             <button x-on:click="edit = ! edit"
                     hx-post="{% url 'cart:cart_add' product.id %}"
@@ -111,7 +125,7 @@
                     hx-swap="none"
                     hx-include="#quantity{{ product.id }}"
                     hx-vals='{"override":"True"}'
-                class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">Save</button>
+                    class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">Save</button>
 
             <input type="hidden" name="quantity" x-model="quantity" id="quantity{{ product.id }}">
         </span>
@@ -139,7 +153,7 @@
                 </button>
 
             {% comment %} {% csrf_token %} {% endcomment %}
-            {% comment %} <form action="{% url "cart:cart_remove" product.id %}" method="post">
+            {% comment %} <form action="{% url 'cart:cart_remove' product.id %}" method="post">
                 <input type="submit" value="Remove">
                 {% csrf_token %}
             </form> {% endcomment %}
@@ -152,13 +166,15 @@
     </tr>
     {% endwith %}
 {% endfor %}
-
-    <tr class="h-14 bg-blue-500 text-white">
+    <!-- para llamar a car.get_total_price primero tiene que estar  -->
+    <tr x-init="totalPrice = parseFloat({{cart.get_total_price}}).toFixed(2)"
+        class="h-14 bg-blue-500 text-white">
         <td class="text-left ps-2 text-lg font-semibold">Total</td>
         <td class="sm:hidden" colspan="3"></td>
         
         <td class="d-none sm:table-cell" colspan="4"></td>
-        <td class="text-right pr-2 text-lg font-semibold">$ <span id="TotalCart">{{ cart.get_total_price }}</span></td>
+        <td class="text-right pr-2 text-lg font-semibold">$ <span   id="TotalCart"
+                                                                    x-text="totalPrice">{{ cart.get_total_price }}</span></td>
     </tr>
 </tbody>
 </table>

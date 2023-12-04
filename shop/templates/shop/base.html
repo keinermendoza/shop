@@ -23,7 +23,12 @@
         <title>My shop - {% block title %}{% endblock %}</title>
 
     </head>
-    <body hx-boost="false" class="max-w-screen-xl mx-auto px-3 md:px-5">
+    <!--  im trying to put the cart_items variable as a global state-->
+    {% with cart_items=context_cart|length %}
+
+    <body   hx-boost="false"
+            x-data="{cartItems: {{cart_items}} }"
+            class="max-w-screen-xl mx-auto px-3 md:px-5">
         <div id="header"
             class="py-3">
             <a href="{% url 'shop:product_list' %}" 
@@ -33,7 +38,18 @@
         <div id="subheader"
             class="bg-gray-300 mb-5 px-2 py-3 rounded">
             <div class="text-right">
-                Your cart is empty.
+                <span>Your Cart </span>
+                {% if cart_items > 0 %}
+                    <a href="{% url 'cart:cart_detail' %}">
+                        <span>has </span>
+                        <span   id="cart-items-quantity" 
+                                x-text="cartItems">{{ cart_items }}</span>
+                        <span> Item{{ cart_items | pluralize }}</span>
+                    </a>
+                {% else %}
+                    <span>is empty.</span>
+                {% endif %}
+    {% endwith %}
             </div>
         </div>
         <div id="content">
