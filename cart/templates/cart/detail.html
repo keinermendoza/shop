@@ -20,8 +20,8 @@
 
     <script>
         document.addEventListener("htmx:confirm", function(e) {
-            e.preventDefault()
             if (Array.from(e.target.classList).includes('delete-btn'))  { 
+                e.preventDefault()
           
               // Mostrar un cuadro de diálogo personalizado con Swal
               Swal.fire({
@@ -30,10 +30,10 @@
               }).then(function(result) {
                 // Si el usuario confirma, continuar con la solicitud htmx
                 if (result.isConfirmed) {
+                    let deleteItemData = new CustomEvent('deleteItemData', {detail : {rowid: e.target.dataset.rowid}})
+                    window.dispatchEvent(deleteItemData)
 
-                    // AQUI, DESPACHAR UN EVENTO ALPINE JS 
-                    $dispatch('foo')
-                  e.detail.issueRequest(true); // Utiliza true para omitir window.confirm
+                    e.detail.issueRequest(true); 
                 }
               });
             }
@@ -47,7 +47,13 @@
 
 {% block content %}
 <h1 class="text-3xl mb-5" >Your shopping cart</h1>
-<table  x-data="{cart: [], totalPrice: 0, updateTotals: function () {
+
+<!-- table is where i store state and methods to update it,
+     including one listener for a custom event defined in <name>.js -->
+<table  x-on:deleteItemData.window="cart = cart.filter(item => item.id != $event.detail.rowid);
+                        updateTotals();"
+
+        x-data="{cart: [], totalPrice: 0, updateTotals: function () {
                                                     cartItems = this.cart.reduce((sum, item) => sum + item.quantity, 0)
                                                     this.totalPrice = (this.cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2)
                                                 },
@@ -118,24 +124,29 @@
 
         <span  :class="edit ? 'inline-block' : 'hidden' " >
 
-            <!-- Decrement Quantity -->
+            <!-- Decrement Quantity 
+                trigeers method to update state -->
             <button x-on:click="quantity > 1 ? --quantity : quantity; updateQuantity(quantity, itemId);" 
                     class="inline-block mr-2 bg-violet-800 text-white px-2 py-1 rounded">-</button>
                 
             <span   x-text="quantity"
                     class="item-quantity text-black" ></span>
 
-            <!-- Increment Quantity -->
+            <!-- Increment Quantity 
+                trigeers method to update state -->
             <button x-on:click="++quantity; updateQuantity(quantity, itemId);" 
                     class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">+</button>
 
-            <!-- EDIT Quantity -->
+            <!-- SAVE Quantity 
+                triggers and AJAX request and change the edit state for this row -->
+            
             <button x-on:click="edit = ! edit"
                     hx-post="{% url 'cart:cart_add' product.id %}"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                     hx-swap="none"
                     hx-include="#quantity{{ product.id }}"
                     hx-vals='{"override":"True"}'
+                    
                     class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">Save</button>
 
             <input type="hidden" name="quantity" x-model="quantity" id="quantity{{ product.id }}">
@@ -143,14 +154,16 @@
   
 
         </td>
-        <td class="w-1/6">
+        <td 
+            class="w-1/6">
             <!-- DELETE item  -->
-            <!-- event trigered by the confirmation in hx-confirm see the script <name>.js -->
-            <button @foo.window="cart.splice(cart.findIndex(item => item.id === itemId), 1);
-                                updateTotals();
-                                "
+            <!-- send AJAX request to update database and deletes the row element.
+                using hx-confirm and <name>.js triggers a custom event 
+                table element listening that event and updated the state    -->
+            <button                               
+                    data-rowid="{{product.id}}"
                     hx-confirm="Are you sure you want to remove the item {{product.name}} from your cart?"
-                    hx-delete="{% url "cart:cart_remove" product.id %}" 
+                    hx-delete="{% url 'cart:cart_remove' product.id %}" 
                     hx-target="closest tr" 
                     hx-swap="outerHTML"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' 
@@ -160,12 +173,10 @@
                     <span class="d-none sm:inline">Remove</span>
                     <span class="sm:hidden">X</span>
             </button>
-
-             
-            <!--  -->
+            
         </td>
         
-        <td class="w-1/6 "   "console.log('foo was dispatched')">$ {{ item.price }}</td>
+        <td class="w-1/6 "  >$ {{ item.price }}</td>
 
         <td class="w-1/6" >$ <span class="subtotal" x-text="(quantity * price).toFixed(2)">{{ item.total_price }}</span></td>
 
