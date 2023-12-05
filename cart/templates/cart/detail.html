@@ -16,6 +16,29 @@
                 totalItems.innerHTML = itemsQuantity.reduce((sum, el) => sum + parseInt(el.innerHTML), 0)
         })}
     </script> -->
+
+
+    <script>
+        document.addEventListener("htmx:confirm", function(e) {
+            e.preventDefault()
+            if (Array.from(e.target.classList).includes('delete-btn'))  { 
+          
+              // Mostrar un cuadro de diálogo personalizado con Swal
+              Swal.fire({
+                title: "Proceed?",
+                text: `I ask you... ${e.detail.question}`
+              }).then(function(result) {
+                // Si el usuario confirma, continuar con la solicitud htmx
+                if (result.isConfirmed) {
+
+                    // AQUI, DESPACHAR UN EVENTO ALPINE JS 
+                    $dispatch('foo')
+                  e.detail.issueRequest(true); // Utiliza true para omitir window.confirm
+                }
+              });
+            }
+          });
+      </script>
 {% endblock script %}
 
 {% block title %}
@@ -24,8 +47,16 @@
 
 {% block content %}
 <h1 class="text-3xl mb-5" >Your shopping cart</h1>
-<table  x-data="{cart: [], totalPrice: 0 }"
+<table  x-data="{cart: [], totalPrice: 0, updateTotals: function () {
+                                                    cartItems = this.cart.reduce((sum, item) => sum + item.quantity, 0)
+                                                    this.totalPrice = (this.cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2)
+                                                },
+                                                updateQuantity: function(quantity, itemId) {
+                                                    this.cart[this.cart.findIndex(item => item.id === itemId)].quantity = quantity
+                                                    this.updateTotals()
+                                                }}"
         class="text-center w-full">
+
     <thead>
         <tr class="h-14 bg-blue-500 text-white">
             <th class="d-none sm:table-cell">Image</th>
@@ -56,39 +87,21 @@
 
 {% for item in cart %}
     {% with product=item.product %}
+
     <tr class="h-40"
         x-data="{itemId: {{product.id}}, quantity: {{item.quantity}}, price: {{item.price}}, edit:false}"
-        x-init="cart.push({id: itemId, quantity: quantity, price: price})"
-        >
+        x-init="cart.push({id: itemId, quantity: quantity, price: price})">
 
         <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
             <a href="{{ product.get_absolute_url }}">
-                <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}"
-                    class="w-full"
-                
-                >
+                <img    src="{% if product.image %}{{ product.image.url }}{% else %}{% static "img/no_image.png" %}{% endif %}"
+                        class="w-full">
             </a>
         </td>
 
-        <td class="w-1/6">{{ product.name }}</td>
+        <td class="w-1/6"  @click="">{{ product.name }}</td>
         <td class="w-1/6">
 
-        <!-- 
-        VERSION 1 ACTUALIZABA TODA LA PAGIAN CON AJAX  
-        {% if item.quantity > 1 %}
-            <button class="inline-block p-1 text-white bg-blue-900 px-2 rounded mr-2" hx-post="{% url 'cart:cart_add' product.id %}"
-                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                hx-target="body"
-                hx-vals='{"override":"True", "quantity": "{{ item.quantity |add:-1 }} " }'
-                >-</button>
-                
-        {% endif %}
-        -->
-
-        <!-- VERSION 2 PEDIA EL FORM DE EDICION VIA AJAX hx-get="{% url 'cart:cart_edit' product.id %}"
-            AL SALVAR quantity ACTUALIZABA TODA LA PAGINA VIA AJAX -->
-
-           
 
 
         <span :class="edit ? 'hidden' : 'inline-block'">
@@ -104,21 +117,19 @@
 
 
         <span  :class="edit ? 'inline-block' : 'hidden' " >
-            <button x-on:click="quantity > 1 ? --quantity : quantity;
-                            cart[cart.findIndex(item => item.id === itemId)].quantity = quantity;
-                            cartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                            totalPrice = (cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2);" 
+
+            <!-- Decrement Quantity -->
+            <button x-on:click="quantity > 1 ? --quantity : quantity; updateQuantity(quantity, itemId);" 
                     class="inline-block mr-2 bg-violet-800 text-white px-2 py-1 rounded">-</button>
                 
-            <span class="item-quantity text-black" x-text="quantity"></span>
+            <span   x-text="quantity"
+                    class="item-quantity text-black" ></span>
 
-            <button x-on:click="++quantity;
-                            cart[cart.findIndex(item => item.id === itemId)].quantity = quantity;
-                            cartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                            totalPrice = (cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2);" 
-                    
+            <!-- Increment Quantity -->
+            <button x-on:click="++quantity; updateQuantity(quantity, itemId);" 
                     class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">+</button>
 
+            <!-- EDIT Quantity -->
             <button x-on:click="edit = ! edit"
                     hx-post="{% url 'cart:cart_add' product.id %}"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
@@ -129,40 +140,35 @@
 
             <input type="hidden" name="quantity" x-model="quantity" id="quantity{{ product.id }}">
         </span>
-        
-            <!-- 
-            VERSION 1 ACTUALIZABA TODA LA PAGIAN CON AJAX  
-            <button class="inline-block p-1 text-white bg-blue-900 px-2 rounded ms-2" hx-post="{% url 'cart:cart_add' product.id %}"
-                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                    hx-target="body"
-                    hx-vals='{"override":"True", "quantity": "{{ item.quantity |add:1 }}"}'
-                    >+</button>
-            -->
+  
 
         </td>
         <td class="w-1/6">
-            <!-- forms are not allowed as children of tr -->
-            <button hx-delete="{% url "cart:cart_remove" product.id %}" hx-target="body" 
-                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' 
+            <!-- DELETE item  -->
+            <!-- event trigered by the confirmation in hx-confirm see the script <name>.js -->
+            <button @foo.window="cart.splice(cart.findIndex(item => item.id === itemId), 1);
+                                updateTotals();
+                                "
                     hx-confirm="Are you sure you want to remove the item {{product.name}} from your cart?"
-                    hx-push-url="true"
-                    class="text-white rounded p-2 bg-blue-900">
+                    hx-delete="{% url "cart:cart_remove" product.id %}" 
+                    hx-target="closest tr" 
+                    hx-swap="outerHTML"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' 
+
+                    class="delete-btn text-white rounded p-2 bg-blue-900">
                     
                     <span class="d-none sm:inline">Remove</span>
                     <span class="sm:hidden">X</span>
-                </button>
+            </button>
 
-            {% comment %} {% csrf_token %} {% endcomment %}
-            {% comment %} <form action="{% url 'cart:cart_remove' product.id %}" method="post">
-                <input type="submit" value="Remove">
-                {% csrf_token %}
-            </form> {% endcomment %}
+             
+            <!--  -->
         </td>
         
-        <td class="w-1/6 " >${{ item.price }}</td>
+        <td class="w-1/6 "   "console.log('foo was dispatched')">$ {{ item.price }}</td>
 
         <td class="w-1/6" >$ <span class="subtotal" x-text="(quantity * price).toFixed(2)">{{ item.total_price }}</span></td>
-        {% comment %} <td class="w-1/6 " >${{ item.total_price }}</td> {% endcomment %}
+
     </tr>
     {% endwith %}
 {% endfor %}
@@ -173,8 +179,11 @@
         <td class="sm:hidden" colspan="3"></td>
         
         <td class="d-none sm:table-cell" colspan="4"></td>
-        <td class="text-right pr-2 text-lg font-semibold">$ <span   id="TotalCart"
-                                                                    x-text="totalPrice">{{ cart.get_total_price }}</span></td>
+        <td class="text-right pr-2 text-lg font-semibold">
+            <span>$ </span>
+            <span id="TotalCart"
+                    x-text="totalPrice">{{ cart.get_total_price }}</span>
+        </td>
     </tr>
 </tbody>
 </table>

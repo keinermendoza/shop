@@ -32,15 +32,16 @@ def cart_remove(request, product_id):
         cart = Cart(request)
         product = get_object_or_404(Product, id=product_id)
         cart.remove(product)
-    return redirect('cart:cart_detail')
+    # return redirect('cart:cart_detail')
+    return HttpResponse('')
 
 
 def cart_detail(request):
     cart = Cart(request)
     return render(request, 'cart/detail.html', {'cart': cart})
 
-def cart_edit(request, product_id):
-    cart = Cart(request)
-    product = cart.cart[str(product_id)]
-    return render(request, 'cart/edit_quantity.html', {'quantity':product['quantity'],
-                                                        'product_id': product_id})
+# def cart_edit(request, product_id):
+#     cart = Cart(request)
+#     product = cart.cart[str(product_id)]
+#     return render(request, 'cart/edit_quantity.html', {'quantity':product['quantity'],
+#                                                         'product_id': product_id})
