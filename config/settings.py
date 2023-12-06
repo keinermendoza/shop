@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'shop',
     'account',
     'cart',
-
+    'orders',
 
     # thrid
     'widget_tweaks',

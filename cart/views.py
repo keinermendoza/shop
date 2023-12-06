@@ -37,8 +37,8 @@ def cart_remove(request, product_id):
 
 
 def cart_detail(request):
-    cart = Cart(request)
-    return render(request, 'cart/detail.html', {'cart': cart})
+    # Now cart was added by context_processors cart = Cart(request)
+    return render(request, 'cart/detail.html')
 
 # def cart_edit(request, product_id):
 #     cart = Cart(request)

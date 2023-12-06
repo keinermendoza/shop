@@ -40,4 +40,18 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["username"]
     objects = CustomUserManager()
 
+class Address(models.Model):
+    user = models.ForeignKey(User, related_name="addresses", on_delete=models.CASCADE) 
+    address = models.CharField(max_length=250)
+    postal_code = models.CharField(max_length=20)
+    city = models.CharField(max_length=50)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Address #{self.id} from {self.user.username}"
    
+    class Meta:
+        ordering = ['-created']
+        indexes = [
+            models.Index(fields=['-created'])
+        ]

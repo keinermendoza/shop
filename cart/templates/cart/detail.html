@@ -50,17 +50,14 @@
 
 <!-- table is where i store state and methods to update it,
      including one listener for a custom event defined in <name>.js -->
-<table  x-on:deleteItemData.window="cart = cart.filter(item => item.id != $event.detail.rowid);
+<table  x-on:deleteItemData.window="cartTable = cartTable.filter(item => item.id != $event.detail.rowid);
                         updateTotals();"
 
-        x-data="{cart: [], totalPrice: 0, updateTotals: function () {
-                                                    cartItems = this.cart.reduce((sum, item) => sum + item.quantity, 0)
-                                                    this.totalPrice = (this.cart.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2)
-                                                },
-                                                updateQuantity: function(quantity, itemId) {
-                                                    this.cart[this.cart.findIndex(item => item.id === itemId)].quantity = quantity
-                                                    this.updateTotals()
-                                                }}"
+        x-data="{cartTable: [], 
+                                updateQuantity: function(quantity, itemId) {
+                                    this.cartTable[this.cartTable.findIndex(item => item.id === itemId)].quantity = quantity
+                                    this.updateTotals()
+                                }}"
         class="text-center w-full">
 
     <thead>
@@ -93,10 +90,14 @@
 
 {% for item in cart %}
     {% with product=item.product %}
-
+    
+    {% comment %}
+        <!-- each row handles and local state for make updates in the cartTable state -->
+    {% endcomment %}
+        
     <tr class="h-40"
         x-data="{itemId: {{product.id}}, quantity: {{item.quantity}}, price: {{item.price}}, edit:false}"
-        x-init="cart.push({id: itemId, quantity: quantity, price: price})">
+        x-init="cartTable.push({id: itemId, quantity: quantity, price: price})">
 
         <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
             <a href="{{ product.get_absolute_url }}">
@@ -178,13 +179,16 @@
         
         <td class="w-1/6 "  >$ {{ item.price }}</td>
 
+        {% comment %}
+            <!-- using local state -->
+        {% endcomment %}
         <td class="w-1/6" >$ <span class="subtotal" x-text="(quantity * price).toFixed(2)">{{ item.total_price }}</span></td>
 
     </tr>
     {% endwith %}
 {% endfor %}
-    <!-- para llamar a car.get_total_price primero tiene que estar  -->
-    <tr x-init="totalPrice = parseFloat({{cart.get_total_price}}).toFixed(2)"
+
+<tr 
         class="h-14 bg-blue-500 text-white">
         <td class="text-left ps-2 text-lg font-semibold">Total</td>
         <td class="sm:hidden" colspan="3"></td>
@@ -192,16 +196,18 @@
         <td class="d-none sm:table-cell" colspan="4"></td>
         <td class="text-right pr-2 text-lg font-semibold">
             <span>$ </span>
-            <span id="TotalCart"
-                    x-text="totalPrice">{{ cart.get_total_price }}</span>
+            <span   id="TotalCart"
+                    x-text="cartTotalPrice">{{ cart.get_total_price }}</span>
         </td>
     </tr>
 </tbody>
 </table>
 
 <p class="text-right mt-5">
-    <a class="p-2 rounded  mr-2 bg-blue-300" href="{% url "shop:product_list" %}" class="button light">Continue shopping</a>
-    <a class="p-2 rounded bg-blue-900 text-white " href="#" class="button">Checkout</a>
+    <a 
+        class="p-2 rounded  mr-2 bg-blue-300" 
+        href="{% url 'shop:product_list' %}" >Continue shopping</a>
+    <a class="p-2 rounded bg-blue-900 text-white " href="#" >Checkout</a>
 </p>
 
 {% endblock %}
