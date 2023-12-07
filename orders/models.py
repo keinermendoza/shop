@@ -1,10 +1,15 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from shop.models import Product
 from account.models import User, Address 
 
+    
+
 class Order(models.Model):
-    user = models.ForeignKey(User, related_name="orders", on_delete=models.CASCADE)
-    address_to = models.ForeignKey(Address, related_name="orders", on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(User, related_name="orders", on_delete=models.CASCADE, blank=True)
+    address_to = models.ForeignKey(Address,
+                                   related_name="orders",
+                                   on_delete=models.DO_NOTHING)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -15,6 +20,12 @@ class Order(models.Model):
         indexes = [
             models.Index(fields=['-created'])
         ]
+
+    # prevent create a order in the admin where the address dosen't bellow to the user
+    def clean(self):
+        super().clean()
+        if self.address_to not in self.user.addresses.all():
+            raise ValidationError("the address must bellow to the user")
 
     def __str__(self):
         return f'Order {self.id}'
