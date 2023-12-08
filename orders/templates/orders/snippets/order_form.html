@@ -1,0 +1,22 @@
+{% load static %}
+
+<form method="post" class="w-full p-4  bg-gray-300 rounded">
+   <h3 class="text-xl mb-2">Select an Address</h3>
+   
+   <p class="text-red-600">{{ form.address_to.errors }}</p>
+    {% for option in form.address_to %}
+        <div    @click="$el.querySelector('input').checked = true"
+                class="p-3 mb-1 cursor-pointer  rounded text-white bg-slate-500 hover:bg-slate-700" >{{ option }}</div>
+        <p class="text-red-600">{{ option.errors.0 }}</p>
+    
+    {% empty %}
+        <p class="text-lg text-red-600 font-semibold">You need to register an Address Before make the Checkout</p>
+    {% endfor %} 
+
+    <p class="text-right">
+        <input class="mt-2 p-2 cursor-pointer rounded bg-blue-700 text-white hover:bg-blue-900" type="submit" value="Place order">
+    </p>
+
+
+    {% csrf_token %}
+</form>

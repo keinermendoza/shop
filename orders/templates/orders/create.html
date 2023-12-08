@@ -1,24 +1,47 @@
 {% extends "shop/base.html" %}
+{% load address_tags %}
+
 {% block title %}
-Checkout
+    Checkout
 {% endblock %}
+
 {% block content %}
-<h1>Checkout</h1>
-<div class="order-info">
-<h3>Your order</h3>
-<ul>
-{% for item in cart %}
-<li>
-{{ item.quantity }}x {{ item.product.name }}
-<span>${{ item.total_price }}</span>
-</li>
-{% endfor %}
-</ul>
-<p>Total: ${{ cart.get_total_price }}</p>
+
+<h1 class="text-4xl mb-5">Checkout</h1>
+
+<div class="flex flex-wrap justify-between gap-4 sm:flex-nowrap">
+<div class="w-full sm:w-1/2 p-4  bg-gray-300 rounded self-start">
+    <h3 class="text-2xl">Your order</h3>
+    <div class="p-2">
+        <ul>
+            {% for item in cart %}
+            <li class="flex justify-between">
+                <span>{{ item.quantity }}x {{ item.product.name }}</span>
+                <span>${{ item.total_price }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <p class="text-lg mt-2 text-right font-semibold">Total: ${{ cart.get_total_price }}</p>
+    </div>
 </div>
-<form method="post" class="order-form">
-{{ form.as_p }}
-<p><input class="bg-blue-700" type="submit" value="Place order"></p>
-{% csrf_token %}
-</form>
+
+<div class="w-full sm:w-1/2">
+    
+    <div    hx-trigger="reload_address_options from:body"
+            hx-get="{% url 'orders:get_updated_order_form' %}">
+        {% include "orders/snippets/order_form.html" with form=form %}
+    </div>
+
+    <div class="w-full p-4  bg-gray-300 rounded mt-2">
+        {% comment %} 
+            this form is included as a custom tag. it's template is orders/snippets/register_addresses_form.html
+            uses htmx, the response its wsap in the innerHtml of this div 
+            the response also triggers a requests that updates the form above 
+        {% endcomment %}
+
+        {% address_form %}
+    </div>
+
+</div>
+
 {% endblock %}

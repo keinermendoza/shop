@@ -19,25 +19,7 @@
 
 
     <script>
-        document.addEventListener("htmx:confirm", function(e) {
-            if (Array.from(e.target.classList).includes('delete-btn'))  { 
-                e.preventDefault()
-          
-              // Mostrar un cuadro de diálogo personalizado con Swal
-              Swal.fire({
-                title: "Proceed?",
-                text: `I ask you... ${e.detail.question}`
-              }).then(function(result) {
-                // Si el usuario confirma, continuar con la solicitud htmx
-                if (result.isConfirmed) {
-                    let deleteItemData = new CustomEvent('deleteItemData', {detail : {rowid: e.target.dataset.rowid}})
-                    window.dispatchEvent(deleteItemData)
-
-                    e.detail.issueRequest(true); 
-                }
-              });
-            }
-          });
+        
       </script>
 {% endblock script %}
 
@@ -50,15 +32,26 @@
 
 <!-- table is where i store state and methods to update it,
      including one listener for a custom event defined in <name>.js -->
-<table  x-on:deleteItemData.window="cartTable = cartTable.filter(item => item.id != $event.detail.rowid);
-                        updateTotals();"
+<table  x-on:deleteItemData.window="alert('funciona')"
 
-        x-data="{cartTable: [], 
+{% comment %} this.cartTable = this.cartTable.filter(item => item.id != $event.detail.rowid)
+                            , this.updateTotals()
+                            , console.log('escuchando') {% endcomment %}
+
+        x-data="{cartTable: [], updateTotals: function () {
+                                    cartTotalItems = this.cartTable.reduce((sum, item) => sum + item.quantity, 0)
+                                    cartTotalPrice = (this.cartTable.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2)
+                                },
+            
                                 updateQuantity: function(quantity, itemId) {
-                                    this.cartTable[this.cartTable.findIndex(item => item.id === itemId)].quantity = quantity
-                                    this.updateTotals()
+                                    this.cartTable[this.cartTable.findIndex(item => item.id === itemId)].quantity = quantity;
+                                    this.updateTotals();
                                 }}"
-        class="text-center w-full">
+        
+        
+        
+                                class="text-center w-full">
+
 
     <thead>
         <tr class="h-14 bg-blue-500 text-white">
@@ -97,7 +90,7 @@
         
     <tr class="h-40"
         x-data="{itemId: {{product.id}}, quantity: {{item.quantity}}, price: {{item.price}}, edit:false}"
-        x-init="cartTable.push({id: itemId, quantity: quantity, price: price})">
+        x-init="cartTable.push({id: itemId, quantity: quantity, price: price}); ">
 
         <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
             <a href="{{ product.get_absolute_url }}">

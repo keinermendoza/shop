@@ -1,25 +1,19 @@
 document.addEventListener("htmx:confirm", function(e) {
-    e.preventDefault()
-
-    Swal.fire({
-        title: "Are you sure?",
-        text: `${e.detail.question}`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Remove it!"
-      }).then((result) => {
+    if (Array.from(e.target.classList).includes('delete-btn'))  { 
+        e.preventDefault()
+  
+      // Mostrar un cuadro de diálogo personalizado con Swal
+      Swal.fire({
+        title: "Proceed?",
+        text: `I ask you... ${e.detail.question}`
+      }).then(function(result) {
+        // Si el usuario confirma, continuar con la solicitud htmx
         if (result.isConfirmed) {
-            Swal.fire({
-                title: "Removed!",
-                icon: "success"
-            }).finally(() => {
-                e.detail.issueRequest(true)
-            });
-            
-        }
-        
-      })
+            let deleteItemData = new CustomEvent('deleteItemData', {detail : {rowid: e.target.dataset.rowid}})
+            window.dispatchEvent(deleteItemData)
 
-  })
+            e.detail.issueRequest(true); 
+        }
+      });
+    }
+  });

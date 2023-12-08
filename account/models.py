@@ -41,7 +41,7 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
 class Address(models.Model):
-    user = models.ForeignKey(User, related_name="addresses", on_delete=models.CASCADE) 
+    user = models.ForeignKey(User, related_name="addresses", on_delete=models.CASCADE, blank=True) 
     address = models.CharField(max_length=250)
     postal_code = models.CharField(max_length=20)
     city = models.CharField(max_length=50)

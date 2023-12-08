@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="{% static 'tailwind/tail.css' %}">
         <link rel="stylesheet" href="{% static 'general.css' %}">
         <script src="{% static 'htmx.js' %}"></script>
-        {% comment %} <script src="{% static 'htmx-listeners.js' %}"></script> {% endcomment %}
+        <script src="{% static 'htmx-listeners.js' %}"></script>
         
         <!-- alpine -->
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -27,11 +27,7 @@
     {% with cart_items=cart|length %}
 
     <body   hx-boost="false"
-            x-data="{cartTotalItems: {{cart_items}}, cartTotalPrice: ({{cart.get_total_price}}).toFixed(2), 
-                        updateTotals: function () {
-                            this.cartTotalItems = cartTable.reduce((sum, item) => sum + item.quantity, 0)
-                            this.cartTotalPrice = (cartTable.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2)
-                        }}"
+            x-data="{cartTotalItems: {{cart_items}}, cartTotalPrice: ({{cart.get_total_price}}).toFixed(2)}"
             
             class="max-w-screen-xl mx-auto px-3 md:px-5">
 
@@ -54,7 +50,7 @@
                         <span> Item{{ cart_items | pluralize }}</span>
                         
                         <span> $ </span>
-                        <span>{{cart.get_total_price}}</span>
+                        <span x-text="cartTotalPrice">{{cart.get_total_price}}</span>
                     </a>
                 {% else %}
                     <span>is empty.</span>
