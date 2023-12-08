@@ -27,4 +27,4 @@ class CustomUserAdmin(UserAdmin):
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['id' ,'user', 'city']
-    search_fields = ('city', 'address', 'postal_code')
+    search_fields = ['city', 'address', 'postal_code']

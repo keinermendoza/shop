@@ -207,7 +207,8 @@
     <a 
         class="p-2 rounded  mr-2 bg-blue-300" 
         href="{% url 'shop:product_list' %}" >Continue shopping</a>
-    <a class="p-2 rounded bg-blue-900 text-white " href="#" >Checkout</a>
+
+    <a class="p-2 rounded bg-blue-900 text-white " href="{% url "orders:order_create" %}" >Checkout</a>
 </p>
 
 {% endblock %}
