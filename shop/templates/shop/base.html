@@ -26,7 +26,7 @@
     <!--  im trying to put the cart_items variable as a global state-->
     {% with cart_items=cart|length %}
 
-    <body   hx-boost="false"
+    <body   
             x-data="{cartTotalItems: {{cart_items}}, cartTotalPrice: ({{cart.get_total_price}}).toFixed(2)}"
             
             class="max-w-screen-xl mx-auto px-3 md:px-5">

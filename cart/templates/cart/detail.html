@@ -32,11 +32,13 @@
 
 <!-- table is where i store state and methods to update it,
      including one listener for a custom event defined in <name>.js -->
-<table  x-on:deleteItemData.window="alert('funciona')"
+<table  
 
 {% comment %} this.cartTable = this.cartTable.filter(item => item.id != $event.detail.rowid)
                             , this.updateTotals()
                             , console.log('escuchando') {% endcomment %}
+
+        
 
         x-data="{cartTable: [], updateTotals: function () {
                                     cartTotalItems = this.cartTable.reduce((sum, item) => sum + item.quantity, 0)
@@ -48,12 +50,17 @@
                                     this.updateTotals();
                                 }}"
         
-        
+                               
         
                                 class="text-center w-full">
 
 
-    <thead>
+    {% comment %} eventListener funcionan pero la operacion con alpine no es leida como valida {% endcomment %}
+    <thead  x-on:deleterow.window="cartTable = cartTable.filter(item => item.id != $event.detail.rowid)
+        ; updateTotals()" >
+
+
+
         <tr class="h-14 bg-blue-500 text-white">
             <th class="d-none sm:table-cell">Image</th>
 
@@ -182,7 +189,8 @@
 {% endfor %}
 
 <tr 
-        class="h-14 bg-blue-500 text-white">
+        class="h-14 bg-blue-500 text-white"
+        id="tester">
         <td class="text-left ps-2 text-lg font-semibold">Total</td>
         <td class="sm:hidden" colspan="3"></td>
         
