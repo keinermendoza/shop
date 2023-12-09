@@ -4,6 +4,9 @@ from cart.cart import Cart
 from .models import Order, OrderItem
 from .forms import OrderCreateForm
 
+from .tasks import order_created
+
+
 def order_create(request):
     if request.method == 'POST':
         form = OrderCreateForm(request.POST, request=request)
@@ -19,6 +22,7 @@ def order_create(request):
                                         product=item['product'],
                                         quantity=item['quantity'])
             cart.clear()
+            order_created.delay(order.id)
 
             return render(request, 'orders/created.html', {'order': order})
 
