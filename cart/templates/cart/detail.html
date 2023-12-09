@@ -4,23 +4,7 @@
 
 {% block script %}
     <script defer src="{% static 'shop/js/buttons-product-cart.js' %}"></script>
-    <!-- <script defer>
-        function claculateTotal() {
-            requestAnimationFrame(() => {
-                let subtotals = Array.from(document.querySelectorAll('.subtotal'))
-                let totalCartPrice = document.getElementById('TotalCart')
-                totalCartPrice.innerHTML = subtotals.reduce((sum, el) => sum + parseInt(el.innerHTML), 0).toFixed(2)
-                
-                let itemsQuantity = Array.from(document.querySelectorAll('.item-quantity'))
-                let totalItems = document.getElementById('cart-items-quantity')
-                totalItems.innerHTML = itemsQuantity.reduce((sum, el) => sum + parseInt(el.innerHTML), 0)
-        })}
-    </script> -->
 
-
-    <script>
-        
-      </script>
 {% endblock script %}
 
 {% block title %}
@@ -30,37 +14,15 @@
 {% block content %}
 <h1 class="text-3xl mb-5" >Your shopping cart</h1>
 
-<!-- table is where i store state and methods to update it,
-     including one listener for a custom event defined in <name>.js -->
-<table  
+{% comment %} 
+    the state uses Alpine.store in the file htmx-listeners 
+    also you can read the docs on https://alpinejs.dev/magics/store 
+{% endcomment %}
 
-{% comment %} this.cartTable = this.cartTable.filter(item => item.id != $event.detail.rowid)
-                            , this.updateTotals()
-                            , console.log('escuchando') {% endcomment %}
-
-        
-
-        x-data="{cartTable: [], updateTotals: function () {
-                                    cartTotalItems = this.cartTable.reduce((sum, item) => sum + item.quantity, 0)
-                                    cartTotalPrice = (this.cartTable.reduce((sum, item) => sum + item.quantity * item.price, 0)).toFixed(2)
-                                },
-            
-                                updateQuantity: function(quantity, itemId) {
-                                    this.cartTable[this.cartTable.findIndex(item => item.id === itemId)].quantity = quantity;
-                                    this.updateTotals();
-                                }}"
-        
-                               
-        
-                                class="text-center w-full">
-
-
-    {% comment %} eventListener funcionan pero la operacion con alpine no es leida como valida {% endcomment %}
-    <thead  x-on:deleterow.window="cartTable = cartTable.filter(item => item.id != $event.detail.rowid)
-        ; updateTotals()" >
-
-
-
+<table x-on:deleterow.window="$store.cart.deleteItem($event.detail.itemId)"
+        class="text-center w-full">
+    
+    <thead>
         <tr class="h-14 bg-blue-500 text-white">
             <th class="d-none sm:table-cell">Image</th>
 
@@ -86,18 +48,18 @@
             </th>
         </tr>
     </thead>
-<tbody class="bg-blue-100">
+    <tbody class="bg-blue-100">
 
 {% for item in cart %}
     {% with product=item.product %}
     
     {% comment %}
-        <!-- each row handles and local state for make updates in the cartTable state -->
+        Each row handles a local state for make updates in the global state
     {% endcomment %}
         
     <tr class="h-40"
         x-data="{itemId: {{product.id}}, quantity: {{item.quantity}}, price: {{item.price}}, edit:false}"
-        x-init="cartTable.push({id: itemId, quantity: quantity, price: price}); ">
+        x-init="$store.cart.items.push({id: itemId, quantity: quantity, price: price})">
 
         <td class="d-none sm:table-cell w-1/6 p-0 sm:p-2">
             <a href="{{ product.get_absolute_url }}">
@@ -116,6 +78,7 @@
             
             <button x-on:click="edit = ! edit"
                     class="p-2 rounded bg-blue-900 text-white ms-2">
+
                 <svg fill="white" xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 512 512">
                     <path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"/>
                 </svg>
@@ -125,21 +88,32 @@
 
         <span  :class="edit ? 'inline-block' : 'hidden' " >
 
-            <!-- Decrement Quantity 
-                trigeers method to update state -->
-            <button x-on:click="quantity > 1 ? --quantity : quantity; updateQuantity(quantity, itemId);" 
+             {% comment %} 
+                Decrement Quantity 
+                trigeers method to update state  
+            {% endcomment %}
+            
+            <button x-on:click="quantity > 1 ? --quantity : quantity; 
+                                $store.cart.updateItemQuantity(quantity, itemId);" 
+                    
                     class="inline-block mr-2 bg-violet-800 text-white px-2 py-1 rounded">-</button>
                 
             <span   x-text="quantity"
                     class="item-quantity text-black" ></span>
 
-            <!-- Increment Quantity 
-                trigeers method to update state -->
-            <button x-on:click="++quantity; updateQuantity(quantity, itemId);" 
+            {% comment %} 
+                Increment Quantity 
+                trigeers method to update state
+            {% endcomment %}
+            <button x-on:click="++quantity;
+                                $store.cart.updateItemQuantity(quantity, itemId);" 
+                    
                     class="inline-block ms-2 bg-violet-800 text-white px-2 py-1 rounded">+</button>
 
-            <!-- SAVE Quantity 
-                triggers and AJAX request and change the edit state for this row -->
+            {% comment %} 
+                SAVE item quantity on DB using HTMX 
+                also hides the edition buttons 
+            {% endcomment %}
             
             <button x-on:click="edit = ! edit"
                     hx-post="{% url 'cart:cart_add' product.id %}"
@@ -155,12 +129,19 @@
   
 
         </td>
-        <td 
-            class="w-1/6">
-            <!-- DELETE item  -->
-            <!-- send AJAX request to update database and deletes the row element.
-                using hx-confirm and <name>.js triggers a custom event 
-                table element listening that event and updated the state    -->
+        <td class="w-1/6">
+            
+            {% comment %} 
+                shows an SWETTALERT confirmation dialogue 
+                    for details you can see .delete-btn in the first lines of htmx-listeners.js 
+               
+                triggers a custom event that removes the row data from the state
+                    for more details you can see x-on:deleterow.window at the begining of this file
+               
+                DELETE item on DB using HTMX
+                uses the response for DELETE the row from the DOM 
+            {% endcomment %}
+
             <button                               
                     data-rowid="{{product.id}}"
                     hx-confirm="Are you sure you want to remove the item {{product.name}} from your cart?"
@@ -180,7 +161,7 @@
         <td class="w-1/6 "  >$ {{ item.price }}</td>
 
         {% comment %}
-            <!-- using local state -->
+            using local state
         {% endcomment %}
         <td class="w-1/6" >$ <span class="subtotal" x-text="(quantity * price).toFixed(2)">{{ item.total_price }}</span></td>
 
@@ -198,7 +179,7 @@
         <td class="text-right pr-2 text-lg font-semibold">
             <span>$ </span>
             <span   id="TotalCart"
-                    x-text="cartTotalPrice">{{ cart.get_total_price }}</span>
+                    x-text="$store.cart.totalPrice">{{ cart.get_total_price }}</span>
         </td>
     </tr>
 </tbody>

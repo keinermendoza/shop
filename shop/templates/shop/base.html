@@ -27,7 +27,8 @@
     {% with cart_items=cart|length %}
 
     <body   
-            x-data="{cartTotalItems: {{cart_items}}, cartTotalPrice: ({{cart.get_total_price}}).toFixed(2)}"
+            {% comment %} x-data="{cartTotalItems: {{cart_items}}, cartTotalPrice: ({{cart.get_total_price}}).toFixed(2)}" {% endcomment %}
+            x-init="$store.cart.getCountItems({{cart_items}}); $store.cart.getTotalPrice({{cart.get_total_price}})"
             
             class="max-w-screen-xl mx-auto px-3 md:px-5">
 
@@ -45,12 +46,13 @@
                 {% if cart_items > 0 %}
                     <a href="{% url 'cart:cart_detail' %}">
                         <span>has </span>
+
                         <span   id="cart-items-quantity" 
-                                x-text="cartTotalItems">{{ cart_items }}</span>
+                                x-text="$store.cart.countItems">{{ cart_items }}</span>
                         <span> Item{{ cart_items | pluralize }}</span>
                         
                         <span> $ </span>
-                        <span x-text="cartTotalPrice">{{cart.get_total_price}}</span>
+                        <span x-text="$store.cart.totalPrice">{{cart.get_total_price}}</span>
                     </a>
                 {% else %}
                     <span>is empty.</span>
