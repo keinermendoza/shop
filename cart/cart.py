@@ -35,7 +35,7 @@ class Cart:
             # item['price'] = Decimal(item['price'])
 
             # i prefer the keep the price updated
-            item['price'] = item['product'].price
+            item['price'] = Decimal(item['product'].price)
             item['total_price'] = item['price'] * item['quantity']
         
             yield item
