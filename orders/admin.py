@@ -7,6 +7,22 @@ from django.utils.safestring import mark_safe
 from django.contrib import admin
 from .models import Order, OrderItem
 from .forms import OrderCreateAdminForm
+from django.utils.safestring import mark_safe
+
+def order_pdf(obj):
+    url = reverse('orders:admin_order_pdf', args=[obj.id])
+    return mark_safe(f'<a href="{url}">PDF</a>')
+order_pdf.short_description = 'Invoice'
+
+
+
+def order_payment(obj):
+    url = obj.get_stripe_url()
+    if obj.stripe_id:
+        html = f'<a href="{url}" target="_blank">{obj.stripe_id}</a>'
+        return mark_safe(html)
+    return ''
+order_payment.short_description = 'Stripe payment'
 
 class OrderItemAdmin(admin.TabularInline):
     model = OrderItem
@@ -57,7 +73,7 @@ def order_detail(obj):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     form = OrderCreateAdminForm
-    list_display = ['user', 'address_to', 'created', 'updated', 'paid', 'total', order_detail]
+    list_display = ['user', 'address_to', 'created', 'updated', 'paid', 'total', order_payment, order_pdf, order_detail]
     # list_filter = ['paid', 'created', 'updated']
     list_filter = []
     

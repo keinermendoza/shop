@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.conf import settings
 import stripe
 
+from .tasks import payment_completed
 from orders.models import Order
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -91,5 +92,8 @@ def stripe_webhook(request):
                 # mark order as paid
             else:
                 order.paid = True
+                # store Stripe payment ID
+                order.stripe_id = session.payment_intent
                 order.save()
+                payment_completed.delay(order.id)
     return HttpResponse(status=200)
