@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  web:
+    build: ./
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./:/shop/
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.env
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
+
+  celery_worker:
+    build: ./
+    command: celery -A config worker -l info
+    depends_on:
+      - rabbitmq
+      - web

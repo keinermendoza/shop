@@ -6,7 +6,7 @@ from cart.cart import Cart
 from .models import Order, OrderItem
 from .forms import OrderCreateForm
 
-# from .tasks import order_created
+from .tasks import order_created
 
 
 def order_create(request):
@@ -24,21 +24,20 @@ def order_create(request):
                                         product=item['product'],
                                         quantity=item['quantity'])
             cart.clear()
-            # Temporary change
-            # order_created.delay(order.id)
+            order_created.delay(order.id)
 
             # set the order in the session
-            # request.session['order_id'] = order.id
+            request.session['order_id'] = order.id
             # redirect for payment
 
-            # Temporary change
-            # return redirect(reverse('payment:process'))
+            return redirect(reverse('payment:process'))
 
-    return render(request, 'orders/created.html', {'order': order})
+    # Temporary change
+    # return render(request, 'orders/created.html', {'order': order})
 
-    # else:
-        # form = OrderCreateForm(request=request)
-    # return render(request, 'orders/create.html', {'form': form})
+    else:
+        form = OrderCreateForm(request=request)
+    return render(request, 'orders/create.html', {'form': form})
 
 @staff_member_required
 def admin_order_detail(request, order_id):
